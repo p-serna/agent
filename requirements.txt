@@ -1,1 +1,4 @@
 requests
+termcolor
+python-dotenv
+openai

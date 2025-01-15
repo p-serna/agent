@@ -11,20 +11,22 @@ repos:
     rev: 24.1.1
     hooks:
     -   id: black
-        args: [--line-length=100]
+    args: [--line-length=100, --preview, --target-version=py37]
+
+-   repo: https://github.com/pycqa/autoflake
+    rev: v2.2.1
+    hooks:
+    -   id: autoflake
+        args: [
+            --in-place,
+            --remove-all-unused-imports,
+            --remove-unused-variables,
+            --expand-star-imports,
+            --ignore-init-module-imports,
+        ]
 
 -   repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
     -   id: isort
-        args: ["--profile", "black", "--filter-files"]
-
--   repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
-    hooks:
-    -   id: flake8
-        additional_dependencies:
-            - flake8-bugbear
-            - flake8-comprehensions
-            - flake8-simplify
-        args: [--max-line-length=100]
+        args: ["--profile", "black", "--filter-files", "--line-length=100"]

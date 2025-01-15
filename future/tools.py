@@ -1,6 +1,5 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List
 
 import requests
 
@@ -15,7 +14,7 @@ class Tool:
     func: callable
 
 
-def google_search(query: str, num_results: int = 10, **kwargs) -> List[Dict[str, Any]]:
+def google_search(query: str, num_results: int = 10, **kwargs) -> str:
     """Find results for a query using Serper's API for Google
 
     Args:
@@ -23,7 +22,7 @@ def google_search(query: str, num_results: int = 10, **kwargs) -> List[Dict[str,
         num_results (int, optional): number of results. Defaults to 10.
 
     Returns:
-        List[Dict[str, Any]]: list of sources
+        str: list of sources
     """
     url = SERPER_ENDPOINT
     headers = {"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"}
@@ -48,4 +47,21 @@ def google_search(query: str, num_results: int = 10, **kwargs) -> List[Dict[str,
                 }
             )
 
-    return cleaned_results
+    result = "\n".join(
+        [
+            f"- [{i}] [{r['title']}]({r['link']}): {r['snippet']}"
+            for i, r in enumerate(cleaned_results)
+        ]
+    )
+
+    return result
+
+
+tools = [
+    Tool(
+        name="Google search",
+        description="useful to search in Google for information about a query",
+        func=google_search,
+    )
+]
+tool_names = [tool.name for tool in tools]
