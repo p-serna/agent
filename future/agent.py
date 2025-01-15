@@ -69,7 +69,7 @@ If you have a final answer and don't need to use any tools, respond with:
                     "final_answer": "I encountered an error. Please try again.",
                 }
 
-    def run(self, query: str, max_steps: int = 2) -> str:
+    def run(self, query: str, max_steps: int = 5) -> str:
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": query},
@@ -156,7 +156,20 @@ If you have a final answer and don't need to use any tools, respond with:
                     }
                 )
 
-        return "Maximum number of steps reached without finding an answer."
+        messages.append(
+            {
+                "role": "user",
+                "content": f"Provide a final answer with the information retrieved so far.",
+            }
+        )
+        response = openai.chat.completions.create(model="gpt-4o", messages=messages)
+        agent_response = self._parse_llm_response(response.choices[0].message.content)
+        if "final_answer" in agent_response:
+            if self.verbose:
+                print(f"Final answer: {agent_response['final_answer']}")
+            return agent_response["final_answer"]
+
+        return agent_response.get("thought", "No final answer provided")
 
 
 if __name__ == "__main__":
@@ -165,6 +178,24 @@ if __name__ == "__main__":
     openai_api_key = os.getenv("OPENAI_API_KEY")
 
     # Initialize the agent
-    agent = Agent(openai_api_key)
+    agent = Agent(openai_api_key, available_tools=["Google search", "Fetch website"])
     query = "Compile a list of 10 statements made by Joe Biden regarding US-China relations. Each statement must have been made on a separate occasion. Provide a source for each statement."
-    response = agent.run(query)
+
+    print(colored("AI Agent initialized. Type 'quit' to exit.", "green"))
+    print(colored("Enter your question: ", "yellow"))
+
+    while True:
+        try:
+            user_input = input(colored("> ", "green"))
+            if user_input.lower() in ["quit", "exit", "q"]:
+                break
+
+            if user_input.strip():
+                result = agent.run(user_input)
+                print(colored("\nFinal Answer:", "yellow"), result, "\n")
+
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            break
+        except Exception as e:
+            print(colored(f"Error: {str(e)}", "red"))
