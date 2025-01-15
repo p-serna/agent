@@ -174,15 +174,30 @@ If you have a final answer and don't need to use any tools, respond with:
 
 if __name__ == "__main__":
     import os
+    import sys
+
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+        interactive = False
+    else:
+        interactive = True
 
     openai_api_key = os.getenv("OPENAI_API_KEY")
 
     # Initialize the agent
     agent = Agent(openai_api_key, available_tools=["Google search", "Fetch website"])
-    query = "Compile a list of 10 statements made by Joe Biden regarding US-China relations. Each statement must have been made on a separate occasion. Provide a source for each statement."
+
+    if not interactive:
+
+        with open(file_path, "r") as file:
+            task = file.read().strip()
+        print(colored(f"AI Agent initialized. Running following task:{task}"))
+        result = agent.run(task)
+        # print(result)
+        sys.exit()
 
     print(colored("AI Agent initialized. Type 'quit' to exit.", "green"))
-    print(colored("Enter your question: ", "yellow"))
+    print(colored("Enter your task: ", "yellow"))
 
     while True:
         try:
