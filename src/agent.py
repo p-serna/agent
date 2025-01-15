@@ -5,7 +5,7 @@ import openai
 from dotenv import load_dotenv
 from termcolor import colored
 
-from future.tools import tool_names, tools
+from src.tools import tool_names, tools
 
 load_dotenv()
 
