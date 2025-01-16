@@ -1,5 +1,4 @@
 import os
-from dataclasses import dataclass
 
 import requests
 from bs4 import BeautifulSoup
@@ -8,13 +7,40 @@ SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 SERPER_ENDPOINT = "https://google.serper.dev/search"
 
 
-@dataclass
 class Tool:
-    name: str
-    description: str
-    func: callable
+
+    def __init__(self, name: str, description: str, func: callable):
+        self.name = name
+        self.description = description
+        self.func = func
+
+    def __str__(self):
+        return f"Tool {self.name}: {self.description}"
+
+    def __repr__(self):
+        return f"Tool {self.name}: {self.description}"
+
+    def __call__(self, *args, **kwds):
+        return self.func(*args, **kwds)
 
 
+def toolify(name: str = "", description: str = ""):
+    def decorator(func):
+        name_dr = func.__name__
+        desc = func.__doc__
+        if description:
+            desc = description
+        if name:
+            name_dr = name
+        return Tool(name_dr, desc, func)
+
+    return decorator
+
+
+@toolify(
+    name="Google search",
+    description="useful to search in Google for information about a query",
+)
 def google_search(query: str, num_results: int = 10, **kwargs) -> str:
     """Find results for a query using Serper's API for Google
 
@@ -58,6 +84,9 @@ def google_search(query: str, num_results: int = 10, **kwargs) -> str:
     return result
 
 
+@toolify(
+    name="Fetch website", description="useful to fetch website content of an url link"
+)
 def fetch_website(url: str) -> str:
     """Fetch and extract main content from a website.
 
@@ -103,16 +132,5 @@ def fetch_website(url: str) -> str:
         return (f"Failed to fetch website: {str(e)}",)
 
 
-tools = [
-    Tool(
-        name="Google search",
-        description="useful to search in Google for information about a query",
-        func=google_search,
-    ),
-    Tool(
-        name="Fetch website",
-        description="useful to fetch website content of an url link",
-        func=fetch_website,
-    ),
-]
+tools = [google_search, fetch_website]
 tool_names = [tool.name for tool in tools]
