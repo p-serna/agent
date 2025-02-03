@@ -2,6 +2,7 @@ import os
 
 import requests
 from bs4 import BeautifulSoup
+from duckduckgo_search import DDGS
 
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 SERPER_ENDPOINT = "https://google.serper.dev/search"
@@ -132,5 +133,39 @@ def fetch_website(url: str) -> str:
         return (f"Failed to fetch website: {str(e)}",)
 
 
-tools = [google_search, fetch_website]
+@toolify(
+    name="DuckDuckGo search",
+    description="useful to search in the web for information about a query using DuckDuckGo",
+)
+def search_ddg(query: str, max_results: int = 10):
+    """
+    Search DuckDuckGo using the duckduckgo-search package.
+
+    Args:
+        query (str): Search query
+        max_results (int): Maximum number of results to return
+
+    Returns:
+        list: List of search results
+    """
+    try:
+        with DDGS() as ddgs:
+            results = ddgs.text(query, max_results=max_results)
+            if len(results) == 0:
+                raise Exception(
+                    "No results found! Try a less restrictive/shorter query."
+                )
+
+            postprocessed_results = [
+                f"[{result['title']}]({result['href']})\n{result['body']}"
+                for result in results
+            ]
+
+            return "## Search Results\n\n" + "\n\n".join(postprocessed_results)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return f"Nothing found. An error ocurred: {e}"
+
+
+tools = [google_search, fetch_website, search_ddg]
 tool_names = [tool.name for tool in tools]

@@ -14,11 +14,14 @@ class Agent:
     def __init__(
         self,
         openai_api_key: str,
+        openai_base_url: str = "https://api.openai.com",
         available_tools: List[str] = tool_names,
+        model: str = "gpt-4o",
         verbose: bool = True,
     ):
+        self.client = openai.Client(api_key=openai_api_key, base_url=openai_base_url)
         self.openai_api_key = openai_api_key
-        openai.api_key = openai_api_key
+        self.model = model
 
         self.tools = [tool for tool in tools if tool.name in available_tools]
         self.available_tools = available_tools
@@ -80,13 +83,15 @@ If you have a final answer and don't need to use any tools, respond with:
         for n_step in range(max_steps):
             if self.verbose:
                 print(colored(f"Step {n_step}", "green"))
-            response = openai.chat.completions.create(model="gpt-4o", messages=messages)
+            response = self.client.chat.completions.create(
+                model=self.model, messages=messages
+            )
 
             # Parse the response
             agent_response = self._parse_llm_response(
                 response.choices[0].message.content
             )
-
+            print(agent_response)
             # Print thought in blue if present
             if self.verbose and "thought" in agent_response:
                 print(colored(f"Thought: {agent_response['thought']}", "cyan"))
@@ -162,7 +167,9 @@ If you have a final answer and don't need to use any tools, respond with:
                 "content": f"Provide a final answer with the information retrieved so far.",
             }
         )
-        response = openai.chat.completions.create(model="gpt-4o", messages=messages)
+        response = self.client.chat.completions.create(
+            model=self.model, messages=messages
+        )
         agent_response = self._parse_llm_response(response.choices[0].message.content)
         if "final_answer" in agent_response:
             if self.verbose:
@@ -183,9 +190,16 @@ if __name__ == "__main__":
         interactive = True
 
     openai_api_key = os.getenv("OPENAI_API_KEY")
+    openai_base_url = os.getenv("OPENAI_BASE_URL")
+    model = os.getenv("MODEL")
 
     # Initialize the agent
-    agent = Agent(openai_api_key, available_tools=["Google search", "Fetch website"])
+    agent = Agent(
+        openai_api_key,
+        openai_base_url,
+        available_tools=["DuckDuckGo search", "Fetch website"],
+        model=model,
+    )
 
     if not interactive:
 
