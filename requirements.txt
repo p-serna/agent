@@ -3,3 +3,4 @@ termcolor
 python-dotenv
 openai
 duckduckgo-search
+tenacity
